@@ -40,9 +40,7 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-const getSteps = () => {
-  return ['Select subscription parameters', 'Payment data', 'Confirmation'];
-};
+const STEPS = ['Select subscription parameters', 'Payment data', 'Confirmation'];
 
 const SubscriptionContainer = () => {
   const classes = useStyles();
@@ -65,15 +63,13 @@ const SubscriptionContainer = () => {
     checked: false,
   });
 
-  const steps = getSteps();
-
   useEffect(() => {
     const fetchData = async () => {
-      let res = await axios.get('https://cloud-storage-prices-moberries.herokuapp.com/prices');
-      let durationsArr = [];
+      const res = await axios.get('https://cloud-storage-prices-moberries.herokuapp.com/prices');
+      const durationsArr = [];
 
-      res.data.subscription_plans.forEach(item => {
-        durationsArr.push({ value: item.duration_months, name: ` Months`, priceUsdPerGb: item.price_usd_per_gb });
+      res.data.subscription_plans.map(item => {
+        return durationsArr.push({ value: item.duration_months, name: ` Months`, priceUsdPerGb: item.price_usd_per_gb });
       });
 
       setData({
@@ -125,7 +121,7 @@ const SubscriptionContainer = () => {
     if(!validEmailRegex.test(confirmData.email)) {
       setErrors(pre => ({...pre, email: 'Not Valid Email'}));
     }
-    
+
     if(validEmailRegex.test(confirmData.email)) {
       let data = {
         parameters: defaultValue,
@@ -138,20 +134,27 @@ const SubscriptionContainer = () => {
         console.log(err);
       }
       setErrors(pre => ({...pre, email: ''}));
-      return setActiveStep((prevActiveStep) => prevActiveStep + 1);
-    }
+      setActiveStep((prevActiveStep) => prevActiveStep + 1);
+    } else {
+      setErrors(pre => ({...pre, email: 'Not Valid Email'}));
+    }  
   };
 
   const calculateTotalPrice = () => {
-    const perGbPriceByMonthObj = data?.duration?.find(item => item.value === defaultValue.duration) || {};
-    const price = perGbPriceByMonthObj?.priceUsdPerGb * defaultValue.gigabytes;
-    const reducedPrice = price * 10 / 100;
-
-    if(defaultValue.upfront === 'yes') {
-      return price - reducedPrice;
-    } else {
-      return price;
+    const perGbPriceByMonthObj = data?.duration?.find((item) => item.value === defaultValue.duration);
+  
+    if (!perGbPriceByMonthObj || !perGbPriceByMonthObj.priceUsdPerGb) {
+      return;
     }
+
+    const price = perGbPriceByMonthObj.priceUsdPerGb * defaultValue.gigabytes;
+  
+    if (defaultValue.upfront === 'yes') {
+      const reducedPrice = (price * 10) / 100;
+      return price - reducedPrice;
+    }
+  
+    return price;
   };
 
   const getStepContent = (stepIndex) => {
@@ -170,14 +173,14 @@ const SubscriptionContainer = () => {
   return (
     <Paper className={classes.root}>
       <Stepper activeStep={activeStep} alternativeLabel>
-        {steps.map((label) => (
+        {STEPS.map((label) => (
           <Step key={label}>
             <StepLabel>{label}</StepLabel>
           </Step>
         ))}
       </Stepper>
       <div>
-        {activeStep === steps.length ? (
+        {activeStep === STEPS.length ? (
           <Grid className={classes.done}>
             <CheckIcon style={{ color: 'green', fontSize: '40px' }} />
             <Typography className={classes.complated}>All steps completed</Typography>
@@ -194,7 +197,7 @@ const SubscriptionContainer = () => {
                 Back
               </Button>
               <Button variant="contained" color="primary" onClick={activeStep === 2 ? handleSubmit : handleNext}>
-                {activeStep === steps.length - 1 ? 'Confirm' : 'Next'}
+                {activeStep === STEPS.length - 1 ? 'Confirm' : 'Next'}
               </Button>
             </div>
           </>
