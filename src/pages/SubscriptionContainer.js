@@ -125,14 +125,13 @@ const SubscriptionContainer = () => {
     if(!validEmailRegex.test(confirmData.email)) {
       setErrors(pre => ({...pre, email: 'Not Valid Email'}));
     }
-    console.log(confirmData.checked)
+    
     if(validEmailRegex.test(confirmData.email)) {
       let data = {
         parameters: defaultValue,
         paymantData: cardData,
         comfirmation: confirmData,
       }
-      console.log(data);
       try {
         axios.post('https://httpbin.org/post', data);
       } catch (err) {
